@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ATTENDANCE-CALCULATOR</title>
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+
+    body{
+      background:#4a90e2;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      min-height:100vh;
+      padding:16px;
+    }
+
+    .app{
+      width:100%;
+      max-width:420px;
+      background:#5aa0f0;
+      border-radius:20px;
+      padding:20px 16px 28px;
+      color:#fff;
+    }
+
+    .title{
+      text-align:center;
+      font-size:1.7rem;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+
+    .divider{
+      width:70%;
+      height:3px;
+      background:#7bb2ff;
+      border-radius:10px;
+      margin:0 auto 20px;
+    }
+
+    .label{
+      font-size:0.95rem;
+      margin-bottom:6px;
+      margin-top:6px;
+    }
+
+    .input{
+      width:100%;
+      border:none;
+      outline:none;
+      border-radius:18px;
+      padding:12px 14px;
+      font-size:1.05rem;
+      color:#fff;
+      background:#6ba8ff;
+      margin-bottom:10px;
+    }
+
+    .input::placeholder{
+      color:#d4e4ff;
+    }
+
+    .subheading{
+      font-size:0.95rem;
+      margin-bottom:8px;
+      margin-top:4px;
+    }
+
+    .percentage-row{
+      display:flex;
+      justify-content:space-between;
+      gap:6px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      flex:1 1 18%;
+      text-align:center;
+      padding:8px 0;
+      border-radius:20px;
+      background:#6ba8ff;
+      font-size:0.85rem;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .pill.active{
+      background:#00a651;
+    }
+
+    .card{
+      background:#5f9fff;
+      border-radius:18px;
+      padding:18px 16px 16px;
+      font-size:0.9rem;
+      line-height:1.5;
+      margin-top:6px;
+    }
+
+    .highlight{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:16px;
+      background:#4a90e2;
+      margin-left:6px;
+      font-weight:600;
+    }
+
+    .highlight.green{
+      background:#00a651;
+    }
+
+    .emoji{
+      margin-left:4px;
+    }
+
+    .btn{
+      margin-top:14px;
+      width:100%;
+      border:none;
+      border-radius:20px;
+      padding:10px 0;
+      background:#00a651;
+      color:#fff;
+      font-size:1rem;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    /* Tablet and up */
+    @media (min-width: 600px){
+      body{
+        padding:32px;
+      }
+      .app{
+        padding:24px 24px 32px;
+        border-radius:24px;
+      }
+      .title{
+        font-size:2rem;
+      }
+      .card{
+        font-size:0.95rem;
+      }
+    }
+
+    /* Desktop and large screens */
+    @media (min-width: 1024px){
+      body{
+        padding:40px;
+      }
+      .app{
+        max-width:480px;
+      }
+      .title{
+        font-size:2.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="title">ATTENDANCE CALCULATOR</div>
+    <div class="divider"></div>
+
+    <div class="label">Classes Conducted</div>
+    <input type="number" id="total" class="input" min="0" placeholder="Enter total classes"/>
+
+    <div class="label">Classes Present</div>
+    <input type="number" id="attended" class="input" min="0" placeholder="Enter attended classes"/>
+
+    <div class="subheading">Required Percentage</div>
+    <div class="percentage-row" id="targets">
+      <div class="pill active" data-value="70">70%</div>
+      <div class="pill" data-value="75">75%</div>
+      <div class="pill" data-value="80">80%</div>
+      <div class="pill" data-value="85">85%</div>
+      <div class="pill" data-value="90">90%</div>
+    </div>
+
+    <button class="btn" id="calcBtn">Calculate</button>
+
+    <div class="card">
+      <p>Hi<span class="emoji">✌️</span></p>
+      <p>Your Current Percentage:
+        <span class="highlight" id="currentPercent">0.00</span>%
+      </p>
+      <p>Oops! You have to attend
+        <span class="highlight" id="requiredClasses">0</span>
+      </p>
+      <p>Classes to maintain your attendance at
+        <span class="highlight green" id="targetText">70%</span>
+      </p>
+      <p>All the best<span class="emoji">🚀</span></p>
+    </div>
+  </div>
+
+  <script>
+    const totalInput = document.getElementById('total');
+    const attendedInput = document.getElementById('attended');
+    const pills = document.querySelectorAll('#targets .pill');
+    const currentPercentSpan = document.getElementById('currentPercent');
+    const requiredClassesSpan = document.getElementById('requiredClasses');
+    const targetTextSpan = document.getElementById('targetText');
+    const calcBtn = document.getElementById('calcBtn');
+
+    let targetPercent = 70;
+
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        pills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        targetPercent = Number(pill.dataset.value);
+        targetTextSpan.textContent = targetPercent + '%';
+      });
+    });
+
+    function calculate() {
+      const total = Number(totalInput.value);
+      const attended = Number(attendedInput.value);
+
+      if (total <= 0 || attended < 0 || attended > total) {
+        currentPercentSpan.textContent = '0.00';
+        requiredClassesSpan.textContent = '0';
+        return;
+      }
+
+      const currentPercent = (attended / total) * 100;
+      currentPercentSpan.textContent = currentPercent.toFixed(2);
+
+      const targetDecimal = targetPercent / 100;
+
+      if (currentPercent >= targetPercent) {
+        requiredClassesSpan.textContent = '0';
+        return;
+      }
+
+      const required = ((targetDecimal * total) - attended) / (1 - targetDecimal);
+      const needed = Math.max(0, Math.ceil(required));
+
+      requiredClassesSpan.textContent = needed.toString();
+    }
+
+    calcBtn.addEventListener('click', calculate);
+  </script>
+</body>
+</html>
