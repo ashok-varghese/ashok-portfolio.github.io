@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Helper Hub</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 { color: var(--primary); margin-top: 0; }
+
+        /* Notes Section */
+        textarea {
+            width: 100%;
+            height: 150px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        /* Planner Section */
+        .planner-input { display: flex; gap: 5px; margin-bottom: 10px; }
+        input[type="text"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        ul { list-style: none; padding: 0; }
+        li { background: #eee; margin: 5px 0; padding: 8px; border-radius: 4px; display: flex; justify-content: space-between; }
+
+        /* Calculator Section */
+        .calc-screen { width: 100%; height: 40px; text-align: right; margin-bottom: 10px; font-size: 1.2rem; padding: 5px; box-sizing: border-box; }
+        .calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+
+        /* Motivation Section */
+        #quote-display { font-style: italic; margin-top: 10px; min-height: 60px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🎓 Student Helper Hub</h1>
+    <p>Your all-in-one study companion</p>
+</header>
+
+<div class="container">
+    <section class="card">
+        <h2>📝 Study Notes</h2>
+        <p>Your notes are saved automatically as you type.</p>
+        <textarea id="notesArea" placeholder="Start typing your study points here..."></textarea>
+    </section>
+
+    <section class="card">
+        <h2>📅 Study Planner</h2>
+        <div class="planner-input">
+            <input type="text" id="taskInput" placeholder="Add a study task...">
+            <button onclick="addTask()">Add</button>
+        </div>
+        <ul id="taskList"></ul>
+    </section>
+
+    <section class="card">
+        <h2>🔢 Quick Calculator</h2>
+        <input type="text" id="calcDisplay" class="calc-screen" readonly>
+        <div class="calc-buttons">
+            <button onclick="clearCalc()">C</button>
+            <button onclick="appendToCalc('/')">/</button>
+            <button onclick="appendToCalc('*')">×</button>
+            <button onclick="deleteLast()">⌫</button>
+            <button onclick="appendToCalc('7')">7</button>
+            <button onclick="appendToCalc('8')">8</button>
+            <button onclick="appendToCalc('9')">9</button>
+            <button onclick="appendToCalc('-')">-</button>
+            <button onclick="appendToCalc('4')">4</button>
+            <button onclick="appendToCalc('5')">5</button>
+            <button onclick="appendToCalc('6')">6</button>
+            <button onclick="appendToCalc('+')">+</button>
+            <button onclick="appendToCalc('1')">1</button>
+            <button onclick="appendToCalc('2')">2</button>
+            <button onclick="appendToCalc('3')">3</button>
+            <button onclick="calculateResult()">=</button>
+            <button onclick="appendToCalc('0')" style="grid-column: span 2;">0</button>
+            <button onclick="appendToCalc('.')">.</button>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>💡 Motivation</h2>
+        <div id="quote-display">"Believe you can and you're halfway there."</div>
+        <button onclick="newQuote()" style="margin-top: 15px;">Get Inspired</button>
+    </section>
+</div>
+
+<script>
+    // --- PERSISTENT NOTES ---
+    const notesArea = document.getElementById('notesArea');
+    // Load saved notes on startup
+    notesArea.value = localStorage.getItem('studentNotes') || "";
+    // Save on every keystroke
+    notesArea.addEventListener('input', () => {
+        localStorage.setItem('studentNotes', notesArea.value);
+    });
+
+    // --- STUDY PLANNER ---
+    function addTask() {
+        const input = document.getElementById('taskInput');
+        if (input.value === "") return;
+        const li = document.createElement('li');
+        li.innerHTML = `${input.value} <button onclick="this.parentElement.remove()" style="background:red; padding:2px 6px;">X</button>`;
+        document.getElementById('taskList').appendChild(li);
+        input.value = "";
+    }
+
+    // --- CALCULATOR ---
+    const calcDisplay = document.getElementById('calcDisplay');
+    function appendToCalc(value) { calcDisplay.value += value; }
+    function clearCalc() { calcDisplay.value = ""; }
+    function deleteLast() { calcDisplay.value = calcDisplay.value.slice(0, -1); }
+    function calculateResult() {
+        try { calcDisplay.value = eval(calcDisplay.value); } 
+        catch { calcDisplay.value = "Error"; }
+    }
+
+    // --- MOTIVATION ---
+    const quotes = [
+        "Success is the sum of small efforts, repeated day in and day out.",
+        "The secret of getting ahead is getting started.",
+        "It always seems impossible until it's done.",
+        "Don't let what you cannot do interfere with what you can do.",
+        "Your education is a dress rehearsal for a life that is yours to lead."
+    ];
+    function newQuote() {
+        const randomIndex = Math.floor(Math.random() * quotes.length);
+        document.getElementById('quote-display').innerText = `"${quotes[randomIndex]}"`;
+    }
+</script>
+
+</body>
+</html>
+
