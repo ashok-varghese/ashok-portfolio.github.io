@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Station — search any city</title>
+<style>
+  :root {
+    --sky-deep: #0b1220;
+    --sky-mid: #12213b;
+    --amber: #f5b942;
+    --cyan: #5ec8e0;
+    --ink: #e7ecf5;
+    --dim: #8b98b3;
+    --line: rgba(231,236,245,0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(94,200,224,0.10), transparent 60%),
+      linear-gradient(180deg, var(--sky-deep), var(--sky-mid));
+    color: var(--ink);
+    font-family: "Inter", "Segoe UI", -apple-system, sans-serif;
+  }
+
+  .station {
+    width: 100%;
+    max-width: 460px;
+  }
+
+  .eyebrow {
+    font-family: "JetBrains Mono", "Courier New", monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin: 0 0 6px 2px;
+  }
+
+  h1 {
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    font-weight: 600;
+    font-size: 26px;
+    margin: 0 0 20px 2px;
+    letter-spacing: -0.01em;
+  }
+
+  form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    background: rgba(231,236,245,0.05);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 14px;
+    font-size: 15px;
+    color: var(--ink);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  input[type="text"]::placeholder { color: var(--dim); }
+
+  input[type="text"]:focus {
+    border-color: var(--cyan);
+    background: rgba(94,200,224,0.06);
+  }
+
+  button {
+    background: var(--amber);
+    color: #1a1206;
+    border: none;
+    border-radius: 10px;
+    padding: 0 20px;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.1s ease, filter 0.15s ease;
+  }
+
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: scale(0.97); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 26px;
+    background: rgba(231,236,245,0.03);
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .card.empty {
+    align-items: center;
+    justify-content: center;
+    color: var(--dim);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .icon-wrap { flex-shrink: 0; width: 72px; height: 72px; }
+
+  .details { flex: 1; min-width: 0; }
+
+  .city-name {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .desc {
+    font-size: 13px;
+    color: var(--dim);
+    margin: 0 0 12px;
+  }
+
+  .temp-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .temp {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 34px;
+    font-weight: 600;
+    color: var(--amber);
+  }
+
+  .feels {
+    font-size: 12px;
+    color: var(--dim);
+  }
+
+  .stats {
+    display: flex;
+    gap: 16px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--dim);
+  }
+
+  .stats b { color: var(--ink); font-weight: 500; }
+
+  .error { color: #f28b82; font-size: 13px; }
+
+  /* --- animated icon --- */
+  .sun {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffe08a, var(--amber));
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { transform: scale(1);} 50% { transform: scale(1.08);} }
+
+  .cloud-icon { position: relative; width: 100%; height: 100%; }
+  .puff {
+    position: absolute; border-radius: 50%; background: #aebbd1;
+    animation: drift 6s ease-in-out infinite;
+  }
+  @keyframes drift { 0%,100% { transform: translateX(0);} 50% { transform: translateX(4px);} }
+
+  .rain-drop {
+    position: absolute; width: 3px; height: 12px; border-radius: 2px;
+    background: var(--cyan);
+    animation: fall 1s linear infinite;
+  }
+  @keyframes fall { 0% { transform: translateY(0); opacity: 1;} 100% { transform: translateY(28px); opacity: 0;} }
+
+  .snow-flake {
+    position: absolute; width: 5px; height: 5px; border-radius: 50%;
+    background: #fff;
+    animation: snowfall 2.4s linear infinite;
+  }
+  @keyframes snowfall { 0% { transform: translateY(0); opacity: 1;} 100% { transform: translateY(26px); opacity: 0;} }
+
+  .bolt {
+    position: absolute; top: 30px; left: 30px;
+    width: 14px; height: 22px;
+    animation: flash 2.2s ease-in-out infinite;
+  }
+  @keyframes flash { 0%,80%,100% { opacity: 0;} 85%,92% { opacity: 1;} }
+
+  .footer-note {
+    margin-top: 16px;
+    font-size: 11px;
+    color: var(--dim);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="station">
+    <p class="eyebrow">Weather Station</p>
+    <h1>Search any city</h1>
+
+    <form id="search-form">
+      <input type="text" id="city-input" placeholder="e.g. Bengaluru, Tokyo, Lisbon" autocomplete="off" aria-label="City name" />
+      <button type="submit">Check</button>
+    </form>
+
+    <div class="card empty" id="result-card">
+      Type a city above and hit Check to see current conditions.
+    </div>
+  </div>
+
+<script>
+  const form = document.getElementById('search-form');
+  const input = document.getElementById('city-input');
+  const card = document.getElementById('result-card');
+
+  function classify(code) {
+    if ([95,96,99].includes(code)) return 'storm';
+    if ([71,73,75,77,85,86].includes(code)) return 'snow';
+    if ([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code)) return 'rain';
+    if ([45,48].includes(code)) return 'fog';
+    if ([1,2,3].includes(code)) return 'cloud';
+    if (code === 0) return 'clear';
+    return 'cloud';
+  }
+
+  function describe(code) {
+    const map = {
+      0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+      45: 'Fog', 48: 'Depositing rime fog',
+      51: 'Light drizzle', 53: 'Drizzle', 55: 'Dense drizzle',
+      56: 'Freezing drizzle', 57: 'Freezing drizzle',
+      61: 'Slight rain', 63: 'Rain', 65: 'Heavy rain',
+      66: 'Freezing rain', 67: 'Freezing rain',
+      71: 'Slight snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Snow grains',
+      80: 'Rain showers', 81: 'Rain showers', 82: 'Violent rain showers',
+      85: 'Snow showers', 86: 'Snow showers',
+      95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Thunderstorm with hail'
+    };
+    return map[code] || 'Unknown';
+  }
+
+  function iconMarkup(kind) {
+    if (kind === 'clear') return '<div class="sun"></div>';
+    if (kind === 'cloud') return `
+      <div class="cloud-icon">
+        <div class="puff" style="width:44px;height:26px;left:14px;top:30px;"></div>
+        <div class="puff" style="width:28px;height:22px;left:38px;top:18px;animation-delay:.4s;"></div>
+      </div>`;
+    if (kind === 'rain' || kind === 'storm') return `
+      <div class="cloud-icon">
+        <div class="puff" style="width:44px;height:26px;left:14px;top:14px;"></div>
+        <div class="puff" style="width:28px;height:22px;left:38px;top:2px;animation-delay:.4s;"></div>
+        <div class="rain-drop" style="left:22px;top:40px;"></div>
+        <div class="rain-drop" style="left:34px;top:40px;animation-delay:.3s;"></div>
+        <div class="rain-drop" style="left:46px;top:40px;animation-delay:.6s;"></div>
+        ${kind === 'storm' ? '<svg class="bolt" viewBox="0 0 14 22"><polygon points="8,0 0,13 5,13 3,22 14,8 8,8" fill="#f5e05a"/></svg>' : ''}
+      </div>`;
+    if (kind === 'snow') return `
+      <div class="cloud-icon">
+        <div class="puff" style="width:44px;height:26px;left:14px;top:14px;background:#c3ccdb;"></div>
+        <div class="puff" style="width:28px;height:22px;left:38px;top:2px;background:#c3ccdb;animation-delay:.4s;"></div>
+        <div class="snow-flake" style="left:22px;top:40px;"></div>
+        <div class="snow-flake" style="left:36px;top:40px;animation-delay:.5s;"></div>
+        <div class="snow-flake" style="left:50px;top:40px;animation-delay:1s;"></div>
+      </div>`;
+    if (kind === 'fog') return `
+      <div class="cloud-icon">
+        <div class="puff" style="width:52px;height:6px;left:10px;top:20px;opacity:.6;"></div>
+        <div class="puff" style="width:44px;height:6px;left:16px;top:34px;opacity:.5;animation-delay:.3s;"></div>
+        <div class="puff" style="width:48px;height:6px;left:12px;top:48px;opacity:.6;animation-delay:.6s;"></div>
+      </div>`;
+    return '';
+  }
+
+  function showLoading() {
+    card.className = 'card empty';
+    card.innerHTML = 'Fetching conditions…';
+  }
+
+  function showError(msg) {
+    card.className = 'card empty';
+    card.innerHTML = `<span class="error">${msg}</span>`;
+  }
+
+  function showResult(name, country, current, daily) {
+    const kind = classify(current.weather_code);
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="icon-wrap">${iconMarkup(kind)}</div>
+      <div class="details">
+        <p class="city-name">${name}${country ? ', ' + country : ''}</p>
+        <p class="desc">${describe(current.weather_code)}</p>
+        <div class="temp-row">
+          <span class="temp">${Math.round(current.temperature_2m)}°C</span>
+          <span class="feels">feels ${Math.round(current.apparent_temperature)}°C</span>
+        </div>
+        <div class="stats">
+          <span><b>${current.relative_humidity_2m}%</b> humidity</span>
+          <span><b>${Math.round(current.wind_speed_10m)}</b> km/h wind</span>
+          <span><b>${Math.round(daily.temperature_2m_max[0])}° / ${Math.round(daily.temperature_2m_min[0])}°</b></span>
+        </div>
+      </div>
+    `;
+  }
+
+  async function lookup(city) {
+    showLoading();
+    try {
+      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+      const geo = await geoRes.json();
+      if (!geo.results || geo.results.length === 0) {
+        showError(`Couldn't find "${city}". Try a different spelling.`);
+        return;
+      }
+      const { latitude, longitude, name, country } = geo.results[0];
+
+      const wxRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+        `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
+        `&daily=temperature_2m_max,temperature_2m_min&timezone=auto`
+      );
+      const wx = await wxRes.json();
+      showResult(name, country, wx.current, wx.daily);
+    } catch (err) {
+      showError('Something went wrong fetching weather. Try again.');
+    }
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const city = input.value.trim();
+    if (city) lookup(city);
+  });
+</script>
+</body>
+</html>
